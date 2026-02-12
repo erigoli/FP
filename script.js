@@ -16,9 +16,39 @@ const topicDetails = document.querySelectorAll('.topic-detail[data-topic-detail]
 const topicContent = {
   accounting: {
     lessons: [
-      { title: 'Three Statements Link', summary: 'Walk through how net income flows into retained earnings and cash flow.' },
-      { title: 'Accruals vs Cash Accounting', summary: 'Understand revenue/expense timing differences and interview implications.' },
-      { title: 'Working Capital Deep Dive', summary: 'Analyze AR, AP, inventory, and cash conversion cycle effects.' },
+      {
+        title: 'Three Statements Link',
+        summary: 'Walk through how net income flows into retained earnings and cash flow.',
+        objective: 'Learn how one operational change can affect the income statement, balance sheet, and cash flow statement together.',
+        keyPoints: [
+          'Net income starts on the income statement and closes into retained earnings.',
+          'Non-cash items like depreciation reduce net income but are added back in operating cash flow.',
+          'Balance sheet changes in working capital accounts feed into operating cash flow adjustments.',
+        ],
+        example: 'If depreciation rises by $10, EBIT and net income fall, PP&E net declines, and CFO adds back the $10 depreciation.',
+      },
+      {
+        title: 'Accruals vs Cash Accounting',
+        summary: 'Understand revenue/expense timing differences and interview implications.',
+        objective: 'Differentiate between accounting profit and real cash generation.',
+        keyPoints: [
+          'Accrual accounting records revenue when earned and expenses when incurred.',
+          'Cash accounting records transactions only when money is received or paid.',
+          'Large accrual balances can indicate timing differences or potential earnings-quality concerns.',
+        ],
+        example: 'A company can book revenue this quarter on credit sales, while cash is only collected in the next quarter.',
+      },
+      {
+        title: 'Working Capital Deep Dive',
+        summary: 'Analyze AR, AP, inventory, and cash conversion cycle effects.',
+        objective: 'Understand how day-to-day operating balances influence free cash flow.',
+        keyPoints: [
+          'Increasing receivables or inventory uses cash.',
+          'Increasing payables provides short-term cash support.',
+          'The cash conversion cycle helps evaluate efficiency in turning operations into cash.',
+        ],
+        example: 'If inventory increases by $20 and payables increase by $8, net working capital uses $12 of cash.',
+      },
     ],
     flashcards: [
       { front: 'What is EBITDA?', back: 'Earnings before interest, taxes, depreciation, and amortization.' },
@@ -66,9 +96,39 @@ const topicContent = {
   },
   valuation: {
     lessons: [
-      { title: 'DCF Framework', summary: 'Build an unlevered free cash flow model and discount using WACC.' },
-      { title: 'Comps Analysis', summary: 'Select peer groups and normalize valuation multiples.' },
-      { title: 'Precedent Transactions', summary: 'Interpret takeover premiums and control value drivers.' },
+      {
+        title: 'DCF Framework',
+        summary: 'Build an unlevered free cash flow model and discount using WACC.',
+        objective: 'Estimate intrinsic value from projected future cash flows.',
+        keyPoints: [
+          'Project revenue, margins, taxes, capex, and working capital to derive unlevered FCF.',
+          'Discount projected FCF by WACC to get present value.',
+          'Add terminal value using either perpetuity growth or exit multiple methods.',
+        ],
+        example: 'Forecast 5 years of FCF, discount each year at 10%, add discounted terminal value, then subtract net debt for equity value.',
+      },
+      {
+        title: 'Comps Analysis',
+        summary: 'Select peer groups and normalize valuation multiples.',
+        objective: 'Value a company relative to how similar companies trade in the market.',
+        keyPoints: [
+          'Peer selection should match business model, growth profile, and margin structure.',
+          'Use trading multiples such as EV/EBITDA, EV/Revenue, and P/E.',
+          'Adjust financials for one-time items to improve comparability.',
+        ],
+        example: 'If peers trade at 12x EBITDA and target EBITDA is $50m, implied enterprise value is roughly $600m.',
+      },
+      {
+        title: 'Precedent Transactions',
+        summary: 'Interpret takeover premiums and control value drivers.',
+        objective: 'Understand market pricing in historical M&A transactions.',
+        keyPoints: [
+          'Transactions often include a control premium over unaffected share price.',
+          'Deal rationale and synergies can justify higher multiples than public comps.',
+          'Vintage and market cycle matter when comparing historical deals.',
+        ],
+        example: 'A target acquired at 30% premium to unaffected price may imply higher EV/EBITDA than its trading peers.',
+      },
     ],
     flashcards: [
       { front: 'What does WACC stand for?', back: 'Weighted Average Cost of Capital.' },
@@ -116,9 +176,39 @@ const topicContent = {
   },
   'financial-statements': {
     lessons: [
-      { title: 'Ratio Analysis Essentials', summary: 'Interpret liquidity, leverage, and profitability ratios.' },
-      { title: 'Trend and Common Size Analysis', summary: 'Compare multi-period performance and margin structures.' },
-      { title: 'Earnings Quality Signals', summary: 'Spot red flags in accruals and cash conversion.' },
+      {
+        title: 'Ratio Analysis Essentials',
+        summary: 'Interpret liquidity, leverage, and profitability ratios.',
+        objective: 'Use core ratios to quickly assess financial health and risk.',
+        keyPoints: [
+          'Liquidity ratios measure near-term ability to meet obligations.',
+          'Leverage ratios assess balance sheet risk and debt capacity.',
+          'Profitability ratios explain how efficiently revenue converts into earnings.',
+        ],
+        example: 'A low current ratio plus falling interest coverage can signal potential refinancing pressure.',
+      },
+      {
+        title: 'Trend and Common Size Analysis',
+        summary: 'Compare multi-period performance and margin structures.',
+        objective: 'Identify direction of performance and isolate structural cost changes.',
+        keyPoints: [
+          'Trend analysis compares metrics across periods to detect momentum.',
+          'Common-size statements express line items as a % of revenue or assets.',
+          'Combining both methods reveals whether scale or efficiency is driving results.',
+        ],
+        example: 'If SG&A as a % of revenue declines over time, operating leverage may be improving.',
+      },
+      {
+        title: 'Earnings Quality Signals',
+        summary: 'Spot red flags in accruals and cash conversion.',
+        objective: 'Judge whether reported earnings are durable and cash-backed.',
+        keyPoints: [
+          'Sustained divergence between net income and cash flow warrants investigation.',
+          'Large one-time gains can inflate earnings without recurring value.',
+          'Rising receivables faster than revenue may indicate aggressive revenue recognition.',
+        ],
+        example: 'A company showing rising earnings but consistently negative operating cash flow may have weak earnings quality.',
+      },
     ],
     flashcards: [
       { front: 'Current Ratio formula?', back: 'Current Assets / Current Liabilities.' },
@@ -168,6 +258,7 @@ const topicContent = {
 
 const flashcardState = {};
 const testState = {};
+const learnState = {};
 let isLogin = true;
 let currentView = 'dashboard';
 
@@ -208,18 +299,79 @@ function renderLearn(topicKey) {
   detail.innerHTML = `
     <button type="button" class="back-btn" data-topic-back="${topicKey}">← Back to ${titleFromTopic(topicKey)}</button>
     <h4 class="detail-title">${titleFromTopic(topicKey)} · Learn</h4>
-    <p class="subtitle">Choose a lesson and study the key concepts.</p>
+    <p class="subtitle">Choose a lesson to open its full learning page.</p>
     <div class="lesson-list">
       ${lessons.map((lesson, index) => `
         <article class="card lesson-card">
           <p class="lesson-label">Lesson ${index + 1}</p>
           <h5>${lesson.title}</h5>
           <p>${lesson.summary}</p>
+          <button type="button" class="ghost-btn inline-btn lesson-open-btn" data-topic="${topicKey}" data-lesson-index="${index}">Open lesson</button>
         </article>
       `).join('')}
     </div>
   `;
+
+  detail.querySelectorAll('.lesson-open-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const lessonIndex = Number(button.dataset.lessonIndex);
+      learnState[topicKey] = { lessonIndex };
+      renderLessonPage(topicKey);
+    });
+  });
+
   attachBackHandler(detail, topicKey);
+}
+
+function renderLessonPage(topicKey) {
+  const detail = getTopicDetail(topicKey);
+  const lessons = topicContent[topicKey].lessons;
+  const lessonIndex = learnState[topicKey]?.lessonIndex ?? 0;
+  const lesson = lessons[lessonIndex];
+
+  detail.innerHTML = `
+    <button type="button" class="back-btn" data-lesson-back="${topicKey}">← Back to lessons</button>
+    <article class="card lesson-page">
+      <p class="lesson-label">Lesson ${lessonIndex + 1} of ${lessons.length}</p>
+      <h4 class="detail-title">${lesson.title}</h4>
+      <p class="subtitle">${lesson.summary}</p>
+      <section class="lesson-section">
+        <h5>Objective</h5>
+        <p>${lesson.objective}</p>
+      </section>
+      <section class="lesson-section">
+        <h5>Key Concepts</h5>
+        <ul>
+          ${lesson.keyPoints.map((point) => `<li>${point}</li>`).join('')}
+        </ul>
+      </section>
+      <section class="lesson-section">
+        <h5>Interview Example</h5>
+        <p>${lesson.example}</p>
+      </section>
+      <div class="lesson-nav">
+        <button type="button" class="ghost-btn" data-lesson-nav="prev" ${lessonIndex === 0 ? 'disabled' : ''}>Previous lesson</button>
+        <button type="button" class="ghost-btn" data-lesson-nav="next" ${lessonIndex === lessons.length - 1 ? 'disabled' : ''}>Next lesson</button>
+      </div>
+    </article>
+  `;
+
+  detail.querySelector('[data-lesson-back]').addEventListener('click', () => {
+    renderLearn(topicKey);
+  });
+
+  const prevBtn = detail.querySelector('[data-lesson-nav="prev"]');
+  const nextBtn = detail.querySelector('[data-lesson-nav="next"]');
+
+  prevBtn.addEventListener('click', () => {
+    learnState[topicKey].lessonIndex -= 1;
+    renderLessonPage(topicKey);
+  });
+
+  nextBtn.addEventListener('click', () => {
+    learnState[topicKey].lessonIndex += 1;
+    renderLessonPage(topicKey);
+  });
 }
 
 function ensureFlashcardState(topicKey) {
