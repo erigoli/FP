@@ -4,6 +4,8 @@ declare(strict_types=1);
 session_start();
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/db.php';
+
 $host = '127.0.0.1';
 $db   = 'financeprep';
 $user = 'financeprep_user';
@@ -54,12 +56,7 @@ try {
         exit;
     }
 
-    $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
+    $pdo = db();
 
     if ($action === 'signup') {
         if ($name === '') {
@@ -85,13 +82,18 @@ try {
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare("INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare("
+            INSERT INTO users (full_name, email, password_hash, study_streak, last_study_date)
+            VALUES (?, ?, ?, 0, NULL)
+        ");
         $stmt->execute([$name, $email, $hash]);
 
         $_SESSION['user'] = [
             'id' => (int)$pdo->lastInsertId(),
             'name' => $name,
-            'email' => $email
+            'email' => $email,
+            'studyStreak' => 0,
+            'lastStudyDate' => null
         ];
 
         echo json_encode([
@@ -103,7 +105,11 @@ try {
     }
 
     if ($action === 'login') {
-        $stmt = $pdo->prepare("SELECT id, full_name, email, password_hash FROM users WHERE email = ?");
+        $stmt = $pdo->prepare("
+            SELECT id, full_name, email, password_hash, study_streak, last_study_date
+            FROM users
+            WHERE email = ?
+        ");
         $stmt->execute([$email]);
         $foundUser = $stmt->fetch();
 
@@ -119,7 +125,9 @@ try {
         $_SESSION['user'] = [
             'id' => (int)$foundUser['id'],
             'name' => $foundUser['full_name'],
-            'email' => $foundUser['email']
+            'email' => $foundUser['email'],
+            'studyStreak' => (int)$foundUser['study_streak'],
+            'lastStudyDate' => $foundUser['last_study_date']
         ];
 
         echo json_encode([

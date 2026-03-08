@@ -45,6 +45,56 @@ function getStatus(int $lessonsCompleted, int $testsCompleted, int $totalLessons
     return 'In Progress';
 }
 
+function updateStudyStreak(PDO $pdo, int $userId): array
+{
+    $stmt = $pdo->prepare('SELECT study_streak, last_study_date FROM users WHERE id = ? LIMIT 1');
+    $stmt->execute([$userId]);
+    $user = $stmt->fetch();
+
+    if (!$user) {
+        return [
+            'studyStreak' => 0,
+            'lastStudyDate' => null,
+        ];
+    }
+
+    $currentStreak = (int)$user['study_streak'];
+    $lastStudyDate = $user['last_study_date'];
+    $today = new DateTimeImmutable('today');
+    $todayString = $today->format('Y-m-d');
+
+    if ($lastStudyDate === $todayString) {
+        return [
+            'studyStreak' => $currentStreak,
+            'lastStudyDate' => $lastStudyDate,
+        ];
+    }
+
+    if ($lastStudyDate !== null) {
+        $lastDate = new DateTimeImmutable($lastStudyDate);
+        $diffDays = (int)$lastDate->diff($today)->days;
+
+        if ($diffDays === 1) {
+            $currentStreak += 1;
+        } else {
+            $currentStreak = 1;
+        }
+    } else {
+        $currentStreak = 1;
+    }
+
+    $updateStmt = $pdo->prepare('UPDATE users SET study_streak = ?, last_study_date = ? WHERE id = ?');
+    $updateStmt->execute([$currentStreak, $todayString, $userId]);
+
+    $_SESSION['user']['studyStreak'] = $currentStreak;
+    $_SESSION['user']['lastStudyDate'] = $todayString;
+
+    return [
+        'studyStreak' => $currentStreak,
+        'lastStudyDate' => $todayString,
+    ];
+}
+
 try {
     $pdo = db();
 
@@ -56,6 +106,10 @@ try {
         ');
         $stmt->execute([$userId]);
         $rows = $stmt->fetchAll();
+
+        $userStmt = $pdo->prepare('SELECT study_streak, last_study_date FROM users WHERE id = ? LIMIT 1');
+        $userStmt->execute([$userId]);
+        $userRow = $userStmt->fetch();
 
         $progress = [];
 
@@ -89,6 +143,8 @@ try {
         echo json_encode([
             'success' => true,
             'progress' => $progress,
+            'studyStreak' => (int)($userRow['study_streak'] ?? 0),
+            'lastStudyDate' => $userRow['last_study_date'] ?? null,
         ]);
         exit;
     }
@@ -191,6 +247,8 @@ try {
         $status,
     ]);
 
+    $streakData = updateStudyStreak($pdo, $userId);
+
     echo json_encode([
         'success' => true,
         'progress' => [
@@ -201,6 +259,8 @@ try {
             'totalLessons' => $totalLessons,
             'totalTests' => $totalTests,
         ],
+        'studyStreak' => $streakData['studyStreak'],
+        'lastStudyDate' => $streakData['lastStudyDate'],
     ]);
 } catch (Throwable $e) {
     http_response_code(500);

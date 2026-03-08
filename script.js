@@ -275,6 +275,7 @@ const completedTestIndexes = {
 let isLogin = true;
 let currentView = 'dashboard';
 let currentUser = null;
+let studyStreak = 0;
 let progressState = {
   accounting: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
   valuation: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
@@ -366,6 +367,7 @@ function updateDashboardUI() {
 
   document.getElementById('topics-completed-value').textContent = `${completedTopics}/${totalTopics}`;
   document.getElementById('overall-progress-value').textContent = `${overallProgress}%`;
+  document.getElementById('study-streak-value').textContent = `${studyStreak} day${studyStreak === 1 ? '' : 's'}`;
 }
 
 async function loadProgress() {
@@ -378,6 +380,7 @@ async function loadProgress() {
     }
 
     progressState = result.progress;
+    studyStreak = Number(result.studyStreak || 0);
     updateDashboardUI();
   } catch (error) {
     console.error('Failed to load progress:', error);
@@ -406,6 +409,7 @@ async function saveProgress(topicKey, type, value) {
     }
 
     progressState[topicKey] = result.progress;
+    studyStreak = Number(result.studyStreak || studyStreak || 0);
     updateDashboardUI();
   } catch (error) {
     console.error('Failed to save progress:', error);
@@ -680,7 +684,7 @@ function attachBackHandler(detailElement, topicKey) {
   });
 }
 
-async function hydrateCompletedSetsFromProgress() {
+function hydrateCompletedSetsFromProgress() {
   Object.keys(progressState).forEach((topicKey) => {
     completedLessonIndexes[topicKey] = new Set();
     completedTestIndexes[topicKey] = new Set();
@@ -697,12 +701,13 @@ async function hydrateCompletedSetsFromProgress() {
 
 async function showAppForUser(user) {
   currentUser = user;
+  studyStreak = Number(user?.studyStreak || 0);
   welcomeUser.textContent = user?.name ? `Welcome, ${user.name}` : '';
   authScreen.classList.add('hidden');
   appScreen.classList.remove('hidden');
   setView(currentView);
   await loadProgress();
-  await hydrateCompletedSetsFromProgress();
+  hydrateCompletedSetsFromProgress();
 }
 
 function showAuthScreen() {
@@ -778,6 +783,7 @@ async function handleLogout() {
   authForm.reset();
   isLogin = true;
   currentView = 'dashboard';
+  studyStreak = 0;
   renderAuthMode();
   setView(currentView);
 
