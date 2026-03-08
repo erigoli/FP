@@ -1,0 +1,211 @@
+<?php
+declare(strict_types=1);
+
+session_start();
+header('Content-Type: application/json');
+
+require_once __DIR__ . '/db.php';
+
+if (!isset($_SESSION['user'])) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Not authenticated.',
+    ]);
+    exit;
+}
+
+$userId = (int)($_SESSION['user']['id'] ?? 0);
+
+if ($userId <= 0) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid session.',
+    ]);
+    exit;
+}
+
+$validTopics = [
+    'accounting' => ['lessons' => 3, 'tests' => 2],
+    'valuation' => ['lessons' => 3, 'tests' => 2],
+    'financial-statements' => ['lessons' => 3, 'tests' => 2],
+];
+
+function getStatus(int $lessonsCompleted, int $testsCompleted, int $totalLessons, int $totalTests): string
+{
+    if ($lessonsCompleted === 0 && $testsCompleted === 0) {
+        return 'Not Started';
+    }
+
+    if ($lessonsCompleted >= $totalLessons && $testsCompleted >= $totalTests) {
+        return 'Completed';
+    }
+
+    return 'In Progress';
+}
+
+try {
+    $pdo = db();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $stmt = $pdo->prepare('
+            SELECT topic_key, lessons_completed, tests_completed, status
+            FROM user_topic_progress
+            WHERE user_id = ?
+        ');
+        $stmt->execute([$userId]);
+        $rows = $stmt->fetchAll();
+
+        $progress = [];
+
+        foreach ($validTopics as $topicKey => $counts) {
+            $progress[$topicKey] = [
+                'topicKey' => $topicKey,
+                'lessonsCompleted' => 0,
+                'testsCompleted' => 0,
+                'status' => 'Not Started',
+                'totalLessons' => $counts['lessons'],
+                'totalTests' => $counts['tests'],
+            ];
+        }
+
+        foreach ($rows as $row) {
+            $topicKey = $row['topic_key'];
+            if (!isset($progress[$topicKey])) {
+                continue;
+            }
+
+            $progress[$topicKey] = [
+                'topicKey' => $topicKey,
+                'lessonsCompleted' => (int)$row['lessons_completed'],
+                'testsCompleted' => (int)$row['tests_completed'],
+                'status' => $row['status'],
+                'totalLessons' => $validTopics[$topicKey]['lessons'],
+                'totalTests' => $validTopics[$topicKey]['tests'],
+            ];
+        }
+
+        echo json_encode([
+            'success' => true,
+            'progress' => $progress,
+        ]);
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Method not allowed.',
+        ]);
+        exit;
+    }
+
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+
+    if (!is_array($data)) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid request body.',
+        ]);
+        exit;
+    }
+
+    $topicKey = trim((string)($data['topicKey'] ?? ''));
+    $type = trim((string)($data['type'] ?? ''));
+    $value = (int)($data['value'] ?? -1);
+
+    if (!isset($validTopics[$topicKey])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid topic.',
+        ]);
+        exit;
+    }
+
+    if ($type !== 'lessons' && $type !== 'tests') {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid progress type.',
+        ]);
+        exit;
+    }
+
+    if ($value < 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid progress value.',
+        ]);
+        exit;
+    }
+
+    $totalLessons = $validTopics[$topicKey]['lessons'];
+    $totalTests = $validTopics[$topicKey]['tests'];
+
+    $selectStmt = $pdo->prepare('
+        SELECT lessons_completed, tests_completed
+        FROM user_topic_progress
+        WHERE user_id = ? AND topic_key = ?
+        LIMIT 1
+    ');
+    $selectStmt->execute([$userId, $topicKey]);
+    $existing = $selectStmt->fetch();
+
+    $lessonsCompleted = 0;
+    $testsCompleted = 0;
+
+    if ($existing) {
+        $lessonsCompleted = (int)$existing['lessons_completed'];
+        $testsCompleted = (int)$existing['tests_completed'];
+    }
+
+    if ($type === 'lessons') {
+        $lessonsCompleted = min($value, $totalLessons);
+    } else {
+        $testsCompleted = min($value, $totalTests);
+    }
+
+    $status = getStatus($lessonsCompleted, $testsCompleted, $totalLessons, $totalTests);
+
+    $upsertStmt = $pdo->prepare('
+        INSERT INTO user_topic_progress (user_id, topic_key, lessons_completed, tests_completed, status)
+        VALUES (?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            lessons_completed = VALUES(lessons_completed),
+            tests_completed = VALUES(tests_completed),
+            status = VALUES(status),
+            updated_at = CURRENT_TIMESTAMP
+    ');
+
+    $upsertStmt->execute([
+        $userId,
+        $topicKey,
+        $lessonsCompleted,
+        $testsCompleted,
+        $status,
+    ]);
+
+    echo json_encode([
+        'success' => true,
+        'progress' => [
+            'topicKey' => $topicKey,
+            'lessonsCompleted' => $lessonsCompleted,
+            'testsCompleted' => $testsCompleted,
+            'status' => $status,
+            'totalLessons' => $totalLessons,
+            'totalTests' => $totalTests,
+        ],
+    ]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage(),
+    ]);
+}

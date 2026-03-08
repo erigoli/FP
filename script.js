@@ -12,6 +12,8 @@ const topicRows = document.querySelectorAll('.topic-row[data-view]');
 const pageViews = document.querySelectorAll('.view[data-view-content]');
 const modeButtons = document.querySelectorAll('.mode-btn[data-topic][data-mode]');
 const topicDetails = document.querySelectorAll('.topic-detail[data-topic-detail]');
+const welcomeUser = document.getElementById('welcome-user');
+const authMessage = document.getElementById('auth-message');
 
 const topicContent = {
   accounting: {
@@ -259,8 +261,37 @@ const topicContent = {
 const flashcardState = {};
 const testState = {};
 const learnState = {};
+const completedLessonIndexes = {
+  accounting: new Set(),
+  valuation: new Set(),
+  'financial-statements': new Set(),
+};
+const completedTestIndexes = {
+  accounting: new Set(),
+  valuation: new Set(),
+  'financial-statements': new Set(),
+};
+
 let isLogin = true;
 let currentView = 'dashboard';
+let currentUser = null;
+let progressState = {
+  accounting: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+  valuation: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+  'financial-statements': { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+};
+
+function showAuthMessage(message, type = 'error') {
+  authMessage.textContent = message;
+  authMessage.classList.remove('hidden', 'success', 'error');
+  authMessage.classList.add(type);
+}
+
+function clearAuthMessage() {
+  authMessage.textContent = '';
+  authMessage.classList.add('hidden');
+  authMessage.classList.remove('success', 'error');
+}
 
 function renderAuthMode() {
   loginTab.classList.toggle('is-active', isLogin);
@@ -269,6 +300,7 @@ function renderAuthMode() {
   loginOnlyOptions.classList.toggle('hidden', !isLogin);
   submitAuth.textContent = isLogin ? 'Log In' : 'Sign Up';
   document.getElementById('name').required = !isLogin;
+  clearAuthMessage();
 }
 
 function setView(viewName) {
@@ -293,9 +325,117 @@ function showTopicHome(topicKey) {
   topicView.querySelector('.topic-detail').classList.add('hidden');
 }
 
+function titleFromTopic(topicKey) {
+  if (topicKey === 'accounting') return 'Accounting Fundamentals';
+  if (topicKey === 'valuation') return 'Valuation Methods';
+  return 'Financial Statement Analysis';
+}
+
+function getStatusClass(status) {
+  return status === 'Not Started' ? 'pill' : 'pill pill-blue';
+}
+
+function updateDashboardUI() {
+  Object.keys(progressState).forEach((topicKey) => {
+    const statusEl = document.getElementById(`topic-status-${topicKey}`);
+    const countsEl = document.getElementById(`topic-counts-${topicKey}`);
+    const topic = progressState[topicKey];
+
+    if (statusEl) {
+      statusEl.textContent = topic.status;
+      statusEl.className = getStatusClass(topic.status);
+    }
+
+    if (countsEl) {
+      countsEl.textContent = `Lessons: ${topic.lessonsCompleted}/${topic.totalLessons} · Tests: ${topic.testsCompleted}/${topic.totalTests}`;
+    }
+  });
+
+  const totalTopics = Object.keys(progressState).length;
+  const completedTopics = Object.values(progressState).filter((topic) => topic.status === 'Completed').length;
+
+  let completedUnits = 0;
+  let totalUnits = 0;
+
+  Object.values(progressState).forEach((topic) => {
+    completedUnits += topic.lessonsCompleted + topic.testsCompleted;
+    totalUnits += topic.totalLessons + topic.totalTests;
+  });
+
+  const overallProgress = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+
+  document.getElementById('topics-completed-value').textContent = `${completedTopics}/${totalTopics}`;
+  document.getElementById('overall-progress-value').textContent = `${overallProgress}%`;
+}
+
+async function loadProgress() {
+  try {
+    const response = await fetch('api/progress.php');
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      return;
+    }
+
+    progressState = result.progress;
+    updateDashboardUI();
+  } catch (error) {
+    console.error('Failed to load progress:', error);
+  }
+}
+
+async function saveProgress(topicKey, type, value) {
+  try {
+    const response = await fetch('api/progress.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        topicKey,
+        type,
+        value,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error('Failed to save progress:', result.message);
+      return;
+    }
+
+    progressState[topicKey] = result.progress;
+    updateDashboardUI();
+  } catch (error) {
+    console.error('Failed to save progress:', error);
+  }
+}
+
+function markLessonComplete(topicKey, lessonIndex) {
+  if (completedLessonIndexes[topicKey].has(lessonIndex)) {
+    return;
+  }
+
+  completedLessonIndexes[topicKey].add(lessonIndex);
+  const completedCount = completedLessonIndexes[topicKey].size;
+  saveProgress(topicKey, 'lessons', completedCount);
+}
+
+function markTestComplete(topicKey, testIndex) {
+  if (completedTestIndexes[topicKey].has(testIndex)) {
+    return;
+  }
+
+  completedTestIndexes[topicKey].add(testIndex);
+  const completedCount = completedTestIndexes[topicKey].size;
+  saveProgress(topicKey, 'tests', completedCount);
+}
+
 function renderLearn(topicKey) {
   const detail = getTopicDetail(topicKey);
   const lessons = topicContent[topicKey].lessons;
+
   detail.innerHTML = `
     <button type="button" class="back-btn" data-topic-back="${topicKey}">← Back to ${titleFromTopic(topicKey)}</button>
     <h4 class="detail-title">${titleFromTopic(topicKey)} · Learn</h4>
@@ -316,6 +456,7 @@ function renderLearn(topicKey) {
     button.addEventListener('click', () => {
       const lessonIndex = Number(button.dataset.lessonIndex);
       learnState[topicKey] = { lessonIndex };
+      markLessonComplete(topicKey, lessonIndex);
       renderLessonPage(topicKey);
     });
   });
@@ -365,11 +506,13 @@ function renderLessonPage(topicKey) {
 
   prevBtn.addEventListener('click', () => {
     learnState[topicKey].lessonIndex -= 1;
+    markLessonComplete(topicKey, learnState[topicKey].lessonIndex);
     renderLessonPage(topicKey);
   });
 
   nextBtn.addEventListener('click', () => {
     learnState[topicKey].lessonIndex += 1;
+    markLessonComplete(topicKey, learnState[topicKey].lessonIndex);
     renderLessonPage(topicKey);
   });
 }
@@ -403,15 +546,18 @@ function renderFlashcards(topicKey) {
   `;
 
   attachBackHandler(detail, topicKey);
+
   detail.querySelector('[data-fc-action="flip"]').addEventListener('click', () => {
     flashcardState[topicKey].flipped = !flashcardState[topicKey].flipped;
     renderFlashcards(topicKey);
   });
+
   detail.querySelector('[data-fc-action="prev"]').addEventListener('click', () => {
     flashcardState[topicKey].index -= 1;
     flashcardState[topicKey].flipped = false;
     renderFlashcards(topicKey);
   });
+
   detail.querySelector('[data-fc-action="next"]').addEventListener('click', () => {
     flashcardState[topicKey].index += 1;
     flashcardState[topicKey].flipped = false;
@@ -428,7 +574,8 @@ function ensureTestState(topicKey) {
 function renderTests(topicKey) {
   ensureTestState(topicKey);
   const tests = topicContent[topicKey].tests;
-  const currentTest = tests[testState[topicKey].selectedTestIndex];
+  const currentTestIndex = testState[topicKey].selectedTestIndex;
+  const currentTest = tests[currentTestIndex];
   const detail = getTopicDetail(topicKey);
 
   detail.innerHTML = `
@@ -436,7 +583,7 @@ function renderTests(topicKey) {
     <h4 class="detail-title">${titleFromTopic(topicKey)} · Tests</h4>
     <div class="test-tabs">
       ${tests.map((test, idx) => `
-        <button type="button" class="test-tab ${idx === testState[topicKey].selectedTestIndex ? 'is-active' : ''}" data-test-index="${idx}">${test.title}</button>
+        <button type="button" class="test-tab ${idx === currentTestIndex ? 'is-active' : ''}" data-test-index="${idx}">${test.title}</button>
       `).join('')}
     </div>
 
@@ -479,14 +626,16 @@ function renderTests(topicKey) {
 
   detail.querySelector(`[data-test-form="${topicKey}"]`).addEventListener('submit', (event) => {
     event.preventDefault();
-    gradeTest(topicKey, currentTest, new FormData(event.target));
+    gradeTest(topicKey, currentTest, new FormData(event.target), currentTestIndex);
   });
 }
 
-function gradeTest(topicKey, test, formData) {
+function gradeTest(topicKey, test, formData, testIndex) {
   let correct = 0;
+
   test.questions.forEach((question) => {
     const response = String(formData.get(question.id) || '').trim();
+
     if (question.type === 'mcq') {
       if (response === question.answer) {
         correct += 1;
@@ -504,12 +653,8 @@ function gradeTest(topicKey, test, formData) {
   const percent = Math.round((correct / test.questions.length) * 100);
   const output = document.querySelector(`[data-grade-output="${topicKey}"]`);
   output.textContent = `Score: ${correct}/${test.questions.length} (${percent}%). MCQ questions are exact-match graded; written responses are keyword-checked.`;
-}
 
-function titleFromTopic(topicKey) {
-  if (topicKey === 'accounting') return 'Accounting Fundamentals';
-  if (topicKey === 'valuation') return 'Valuation Methods';
-  return 'Financial Statement Analysis';
+  markTestComplete(topicKey, testIndex);
 }
 
 function openTopicMode(topicKey, mode) {
@@ -535,6 +680,147 @@ function attachBackHandler(detailElement, topicKey) {
   });
 }
 
+async function hydrateCompletedSetsFromProgress() {
+  Object.keys(progressState).forEach((topicKey) => {
+    completedLessonIndexes[topicKey] = new Set();
+    completedTestIndexes[topicKey] = new Set();
+
+    for (let i = 0; i < progressState[topicKey].lessonsCompleted; i += 1) {
+      completedLessonIndexes[topicKey].add(i);
+    }
+
+    for (let i = 0; i < progressState[topicKey].testsCompleted; i += 1) {
+      completedTestIndexes[topicKey].add(i);
+    }
+  });
+}
+
+async function showAppForUser(user) {
+  currentUser = user;
+  welcomeUser.textContent = user?.name ? `Welcome, ${user.name}` : '';
+  authScreen.classList.add('hidden');
+  appScreen.classList.remove('hidden');
+  setView(currentView);
+  await loadProgress();
+  await hydrateCompletedSetsFromProgress();
+}
+
+function showAuthScreen() {
+  currentUser = null;
+  welcomeUser.textContent = '';
+  appScreen.classList.add('hidden');
+  authScreen.classList.remove('hidden');
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  clearAuthMessage();
+
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  const payload = {
+    action: isLogin ? 'login' : 'signup',
+    email,
+    password,
+    name,
+  };
+
+  submitAuth.disabled = true;
+  submitAuth.textContent = isLogin ? 'Logging In...' : 'Signing Up...';
+
+  try {
+    const response = await fetch('api/auth.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const rawText = await response.text();
+
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch (error) {
+      showAuthMessage('Server did not return valid JSON.', 'error');
+      return;
+    }
+
+    if (!response.ok || !result.success) {
+      showAuthMessage(result.message || 'Something went wrong.', 'error');
+      return;
+    }
+
+    showAuthMessage(result.message || 'Success.', 'success');
+    authForm.reset();
+    await showAppForUser(result.user);
+  } catch (error) {
+    console.error('Fetch error:', error);
+    showAuthMessage('Unable to connect to the server.', 'error');
+  } finally {
+    submitAuth.disabled = false;
+    submitAuth.textContent = isLogin ? 'Log In' : 'Sign Up';
+  }
+}
+
+async function handleLogout() {
+  try {
+    await fetch('api/logout.php', {
+      method: 'POST',
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+  authForm.reset();
+  isLogin = true;
+  currentView = 'dashboard';
+  renderAuthMode();
+  setView(currentView);
+
+  topicDetails.forEach((detail) => {
+    detail.classList.add('hidden');
+    detail.innerHTML = '';
+  });
+
+  document.querySelectorAll('.topic-home').forEach((home) => home.classList.remove('hidden'));
+
+  progressState = {
+    accounting: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+    valuation: { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+    'financial-statements': { lessonsCompleted: 0, testsCompleted: 0, status: 'Not Started', totalLessons: 3, totalTests: 2 },
+  };
+
+  completedLessonIndexes.accounting = new Set();
+  completedLessonIndexes.valuation = new Set();
+  completedLessonIndexes['financial-statements'] = new Set();
+  completedTestIndexes.accounting = new Set();
+  completedTestIndexes.valuation = new Set();
+  completedTestIndexes['financial-statements'] = new Set();
+
+  updateDashboardUI();
+  showAuthScreen();
+}
+
+async function checkSession() {
+  try {
+    const response = await fetch('api/session.php');
+    const result = await response.json();
+
+    if (result.loggedIn && result.user) {
+      await showAppForUser(result.user);
+    } else {
+      showAuthScreen();
+    }
+  } catch (error) {
+    console.error(error);
+    showAuthScreen();
+  }
+}
+
 loginTab.addEventListener('click', () => {
   isLogin = true;
   renderAuthMode();
@@ -545,27 +831,8 @@ signupTab.addEventListener('click', () => {
   renderAuthMode();
 });
 
-authForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  authScreen.classList.add('hidden');
-  appScreen.classList.remove('hidden');
-  setView(currentView);
-});
-
-logoutBtn.addEventListener('click', () => {
-  appScreen.classList.add('hidden');
-  authScreen.classList.remove('hidden');
-  authForm.reset();
-  isLogin = true;
-  currentView = 'dashboard';
-  renderAuthMode();
-  setView(currentView);
-  topicDetails.forEach((detail) => {
-    detail.classList.add('hidden');
-    detail.innerHTML = '';
-  });
-  document.querySelectorAll('.topic-home').forEach((home) => home.classList.remove('hidden'));
-});
+authForm.addEventListener('submit', handleAuthSubmit);
+logoutBtn.addEventListener('click', handleLogout);
 
 navButtons.forEach((button) => {
   button.addEventListener('click', () => {
@@ -594,3 +861,5 @@ modeButtons.forEach((button) => {
 
 renderAuthMode();
 setView(currentView);
+updateDashboardUI();
+checkSession();
