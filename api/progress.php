@@ -27,7 +27,7 @@ if ($userId <= 0) {
 }
 
 $validTopics = [
-    'accounting' => ['lessons' => 3, 'tests' => 2],
+    'accounting' => ['lessons' => 15, 'tests' => 2],
     'valuation' => ['lessons' => 3, 'tests' => 2],
     'financial-statements' => ['lessons' => 3, 'tests' => 2],
 ];

@@ -399,31 +399,77 @@ body {
 }
 
 .lesson-page {
-  padding: 20px;
+  padding: 24px;
+}
+
+.lesson-kicker {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin: 0 0 8px;
+}
+
+.lesson-summary {
+  margin: 0 0 20px;
+  color: #4b5563;
 }
 
 .lesson-section {
-  margin-bottom: 16px;
+  margin-bottom: 22px;
 }
 
 .lesson-section h5 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 1rem;
 }
 
 .lesson-section p {
-  margin: 0;
+  margin: 0 0 12px;
   color: #374151;
+  line-height: 1.7;
 }
 
-.lesson-section ul {
+.lesson-section p:last-child {
+  margin-bottom: 0;
+}
+
+.lesson-section ul,
+.lesson-section ol {
   margin: 0;
   padding-left: 20px;
   color: #374151;
+  line-height: 1.7;
 }
 
 .lesson-section li {
   margin-bottom: 8px;
+}
+
+.lesson-formula {
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 600;
+  margin: 14px 0 0;
+}
+
+.practice-box {
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.practice-box h5 {
+  margin: 0 0 10px;
+}
+
+.practice-box ol {
+  margin: 0;
+  padding-left: 20px;
 }
 
 .lesson-nav {
