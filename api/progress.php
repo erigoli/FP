@@ -27,9 +27,9 @@ if ($userId <= 0) {
 }
 
 $validTopics = [
-    'accounting' => ['lessons' => 15, 'tests' => 2],
-    'valuation' => ['lessons' => 3, 'tests' => 2],
-    'financial-statements' => ['lessons' => 3, 'tests' => 2],
+    'accounting' => ['lessons' => 15, 'tests' => 1],
+    'valuation' => ['lessons' => 15, 'tests' => 1],
+    'financial-statements' => ['lessons' => 15, 'tests' => 1],
 ];
 
 function getStatus(int $lessonsCompleted, int $testsCompleted, int $totalLessons, int $totalTests): string
@@ -130,11 +130,20 @@ try {
                 continue;
             }
 
+            $lessonsCompleted = min((int)$row['lessons_completed'], $validTopics[$topicKey]['lessons']);
+            $testsCompleted = min((int)$row['tests_completed'], $validTopics[$topicKey]['tests']);
+            $status = getStatus(
+                $lessonsCompleted,
+                $testsCompleted,
+                $validTopics[$topicKey]['lessons'],
+                $validTopics[$topicKey]['tests']
+            );
+
             $progress[$topicKey] = [
                 'topicKey' => $topicKey,
-                'lessonsCompleted' => (int)$row['lessons_completed'],
-                'testsCompleted' => (int)$row['tests_completed'],
-                'status' => $row['status'],
+                'lessonsCompleted' => $lessonsCompleted,
+                'testsCompleted' => $testsCompleted,
+                'status' => $status,
                 'totalLessons' => $validTopics[$topicKey]['lessons'],
                 'totalTests' => $validTopics[$topicKey]['tests'],
             ];

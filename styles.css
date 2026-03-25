@@ -505,6 +505,25 @@ body {
   background: #eff6ff;
 }
 
+.flashcard-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.flashcard-toolbar .subtitle {
+  margin: 0;
+}
+
+.flashcard-copy-status {
+  min-height: 20px;
+  margin: 0 0 12px;
+  color: #1d4ed8;
+  font-size: 0.95rem;
+}
+
 .flashcard-controls {
   display: flex;
   gap: 10px;
@@ -547,6 +566,41 @@ body {
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
+}
+
+.grade-summary {
+  margin: 0;
+}
+
+.answer-review-list {
+  display: grid;
+  gap: 12px;
+}
+
+.answer-review {
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  padding: 14px;
+  background: #f8fbff;
+}
+
+.answer-review.is-correct {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.answer-review.is-incorrect {
+  border-color: #fbcfe8;
+  background: #fff1f2;
+}
+
+.answer-review-title {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.answer-review p {
+  margin: 6px 0 0;
 }
 
 .choice-row {
