@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinancePrep - HTML/CSS/JS</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=2" />
   </head>
   <body>
     <section id="auth-screen" class="screen center-screen">
@@ -69,7 +69,6 @@
       <main class="app-main">
         <header class="topbar">
           <span id="welcome-user" class="welcome-user"></span>
-          <button class="ghost-btn" type="button">Profile</button>
           <button id="logout-btn" class="ghost-btn" type="button">Logout</button>
         </header>
 
@@ -98,7 +97,7 @@
               <article class="topic-row" data-view="accounting" role="button" tabindex="0">
                 <div>
                   <div class="topic-title-row">
-                    <strong>Accounting Fundamentals</strong>
+                    <strong>1) Accounting Fundamentals</strong>
                     <span class="pill" id="topic-status-accounting">Not Started</span>
                   </div>
                   <p id="topic-counts-accounting">Lessons: 0/15 · Tests: 0/1</p>
@@ -109,7 +108,7 @@
               <article class="topic-row" data-view="valuation" role="button" tabindex="0">
                 <div>
                   <div class="topic-title-row">
-                    <strong>Valuation Methods</strong>
+                    <strong>2) Valuation Methods</strong>
                     <span class="pill" id="topic-status-valuation">Not Started</span>
                   </div>
                   <p id="topic-counts-valuation">Lessons: 0/15 · Tests: 0/1</p>
@@ -120,7 +119,7 @@
               <article class="topic-row" data-view="financial-statements" role="button" tabindex="0">
                 <div>
                   <div class="topic-title-row">
-                    <strong>Capital Markets</strong>
+                    <strong>3) Capital Markets</strong>
                     <span class="pill" id="topic-status-financial-statements">Not Started</span>
                   </div>
                   <p id="topic-counts-financial-statements">Lessons: 0/15 · Tests: 0/1</p>
@@ -132,12 +131,13 @@
 
           <section class="view hidden" data-view-content="accounting" data-topic-view="accounting">
             <div class="topic-home">
+              <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>
               <h3>Accounting Fundamentals</h3>
               <p class="subtitle">Choose how you want to study this topic.</p>
               <div class="mode-grid">
-                <button class="mode-btn" type="button" data-topic="accounting" data-mode="learn">Learn</button>
-                <button class="mode-btn" type="button" data-topic="accounting" data-mode="flashcards">Flashcards</button>
-                <button class="mode-btn" type="button" data-topic="accounting" data-mode="tests">Tests</button>
+                <button class="mode-btn" type="button" data-topic="accounting" data-mode="learn">Learn <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="accounting" data-mode="flashcards">Flashcards <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="accounting" data-mode="tests">Tests <span class="mode-start">Start →</span></button>
               </div>
             </div>
             <div class="topic-detail hidden" data-topic-detail="accounting"></div>
@@ -145,12 +145,13 @@
 
           <section class="view hidden" data-view-content="valuation" data-topic-view="valuation">
             <div class="topic-home">
+              <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>
               <h3>Valuation Methods</h3>
               <p class="subtitle">Choose how you want to study this topic.</p>
               <div class="mode-grid">
-                <button class="mode-btn" type="button" data-topic="valuation" data-mode="learn">Learn</button>
-                <button class="mode-btn" type="button" data-topic="valuation" data-mode="flashcards">Flashcards</button>
-                <button class="mode-btn" type="button" data-topic="valuation" data-mode="tests">Tests</button>
+                <button class="mode-btn" type="button" data-topic="valuation" data-mode="learn">Learn <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="valuation" data-mode="flashcards">Flashcards <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="valuation" data-mode="tests">Tests <span class="mode-start">Start →</span></button>
               </div>
             </div>
             <div class="topic-detail hidden" data-topic-detail="valuation"></div>
@@ -158,12 +159,13 @@
 
           <section class="view hidden" data-view-content="financial-statements" data-topic-view="financial-statements">
             <div class="topic-home">
+              <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>
               <h3>Capital Markets</h3>
               <p class="subtitle">Choose how you want to study this topic.</p>
               <div class="mode-grid">
-                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="learn">Learn</button>
-                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="flashcards">Flashcards</button>
-                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="tests">Tests</button>
+                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="learn">Learn <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="flashcards">Flashcards <span class="mode-start">Start →</span></button>
+                <button class="mode-btn" type="button" data-topic="financial-statements" data-mode="tests">Tests <span class="mode-start">Start →</span></button>
               </div>
             </div>
             <div class="topic-detail hidden" data-topic-detail="financial-statements"></div>
@@ -172,6 +174,6 @@
       </main>
     </section>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
   </body>
 </html>

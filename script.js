@@ -1771,6 +1771,17 @@ function getTopicDetail(topicKey) {
   return document.querySelector(`[data-topic-detail="${topicKey}"]`);
 }
 
+
+function goToDashboard() {
+  topicDetails.forEach((detail) => {
+    detail.classList.add('hidden');
+  });
+  document.querySelectorAll('.topic-home').forEach((home) => home.classList.remove('hidden'));
+  setView('dashboard');
+}
+
+window.goToDashboard = goToDashboard;
+
 function showTopicHome(topicKey) {
   const topicView = document.querySelector(`[data-topic-view="${topicKey}"]`);
   if (!topicView) return;
@@ -2541,6 +2552,13 @@ modeButtons.forEach((button) => {
   button.addEventListener('click', () => {
     openTopicMode(button.dataset.topic, button.dataset.mode);
   });
+});
+
+
+document.addEventListener('click', (event) => {
+  const dashboardBackButton = event.target.closest('[data-dashboard-back]');
+  if (!dashboardBackButton) return;
+  goToDashboard();
 });
 
 renderAuthMode();
