@@ -1,4 +1,5 @@
 <?php
+// Centralized PDO connection helper and database environment configuration.
 declare(strict_types=1);
 
 const DB_HOST = '127.0.0.1';

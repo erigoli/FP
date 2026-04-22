@@ -1,4 +1,5 @@
 <?php
+// Returns whether a user session is active, plus user payload when authenticated.
 declare(strict_types=1);
 
 session_start();

@@ -1,12 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Basic metadata and responsive viewport settings. -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinancePrep - HTML/CSS/JS</title>
     <link rel="stylesheet" href="styles.css?v=2" />
   </head>
   <body>
+    <!-- Authentication screen shown to unauthenticated users. -->
     <section id="auth-screen" class="screen center-screen">
       <div class="auth-wrapper">
         <header class="branding">
@@ -15,12 +17,14 @@
         </header>
 
         <div class="card">
+          <!-- Auth mode tabs: Log In / Sign Up. -->
           <div class="tabs">
             <button id="login-tab" class="tab is-active" type="button">Log In</button>
             <button id="signup-tab" class="tab" type="button">Sign Up</button>
           </div>
 
           <form id="auth-form">
+            <!-- Name is only required for sign-up mode. -->
             <div id="name-field" class="field hidden">
               <label for="name">Full Name</label>
               <input id="name" name="name" type="text" placeholder="Enter your full name" />
@@ -36,6 +40,7 @@
               <input id="password" name="password" type="password" placeholder="Enter your password" required />
             </div>
 
+            <!-- Login-only utility actions. -->
             <div id="login-only-options" class="row">
               <label class="checkbox-label">
                 <input type="checkbox" />
@@ -51,6 +56,7 @@
       </div>
     </section>
 
+    <!-- Main application screen shown after successful authentication. -->
     <section id="app-screen" class="screen hidden">
       <aside class="sidebar">
         <div class="sidebar-brand">
@@ -73,6 +79,7 @@
         </header>
 
         <section class="content">
+          <!-- Dashboard overview with progress snapshots and quick topic access. -->
           <section class="view" data-view-content="dashboard">
             <h3>Dashboard</h3>
             <p class="subtitle">Track your progress and continue learning</p>
@@ -129,6 +136,7 @@
             </div>
           </section>
 
+          <!-- Topic view: Accounting Fundamentals. -->
           <section class="view hidden" data-view-content="accounting" data-topic-view="accounting">
             <div class="topic-home">
               <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>
@@ -143,6 +151,7 @@
             <div class="topic-detail hidden" data-topic-detail="accounting"></div>
           </section>
 
+          <!-- Topic view: Valuation Methods. -->
           <section class="view hidden" data-view-content="valuation" data-topic-view="valuation">
             <div class="topic-home">
               <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>
@@ -157,6 +166,7 @@
             <div class="topic-detail hidden" data-topic-detail="valuation"></div>
           </section>
 
+          <!-- Topic view: Capital Markets. -->
           <section class="view hidden" data-view-content="financial-statements" data-topic-view="financial-statements">
             <div class="topic-home">
               <button class="back-btn" type="button" data-dashboard-back onclick="goToDashboard()">← Back to Dashboard</button>

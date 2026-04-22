@@ -1,4 +1,5 @@
 <?php
+// Handles login and signup requests, validates input, and stores authenticated user session data.
 declare(strict_types=1);
 
 session_start();

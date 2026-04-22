@@ -1,3 +1,4 @@
+// Core client-side application logic for authentication, navigation, topic study flows, and progress syncing.
 const authScreen = document.getElementById('auth-screen');
 const appScreen = document.getElementById('app-screen');
 const loginTab = document.getElementById('login-tab');
@@ -2500,6 +2501,19 @@ async function handleLogout() {
   showAuthScreen();
 }
 
+
+// Utility action: copy the full current page HTML with Ctrl/Cmd + Shift + C.
+async function copyWholePageFile() {
+  const fullMarkup = `<!doctype html>\n${document.documentElement.outerHTML}`;
+  try {
+    await navigator.clipboard.writeText(fullMarkup);
+    alert('The full current page HTML has been copied.');
+  } catch (error) {
+    console.error(error);
+    alert('Unable to copy automatically. Please copy from View Source.');
+  }
+}
+
 async function checkSession() {
   try {
     const response = await fetch('api/session.php');
@@ -2516,25 +2530,31 @@ async function checkSession() {
   }
 }
 
+// Auth tab action: switch the auth form into login mode.
 loginTab.addEventListener('click', () => {
   isLogin = true;
   renderAuthMode();
 });
 
+// Auth tab action: switch the auth form into signup mode.
 signupTab.addEventListener('click', () => {
   isLogin = false;
   renderAuthMode();
 });
 
+// Form action: submit login/signup request.
 authForm.addEventListener('submit', handleAuthSubmit);
+// Header action: log out the current session.
 logoutBtn.addEventListener('click', handleLogout);
 
+// Sidebar action: navigate between dashboard and topic root views.
 navButtons.forEach((button) => {
   button.addEventListener('click', () => {
     setView(button.dataset.view);
   });
 });
 
+// Dashboard action: open a topic by click or keyboard interaction.
 topicRows.forEach((row) => {
   row.addEventListener('click', () => {
     setView(row.dataset.view);
@@ -2548,6 +2568,7 @@ topicRows.forEach((row) => {
   });
 });
 
+// Topic action: open Learn, Flashcards, or Tests mode for a topic.
 modeButtons.forEach((button) => {
   button.addEventListener('click', () => {
     openTopicMode(button.dataset.topic, button.dataset.mode);
@@ -2555,10 +2576,19 @@ modeButtons.forEach((button) => {
 });
 
 
+// Delegated action: support all "back to dashboard" controls.
 document.addEventListener('click', (event) => {
   const dashboardBackButton = event.target.closest('[data-dashboard-back]');
   if (!dashboardBackButton) return;
   goToDashboard();
+});
+
+// Global utility action: keyboard shortcut to copy the whole current HTML file.
+document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === 'c') {
+    event.preventDefault();
+    copyWholePageFile();
+  }
 });
 
 renderAuthMode();

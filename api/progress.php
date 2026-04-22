@@ -1,4 +1,5 @@
 <?php
+// Reads and updates per-topic learning progress and study streak data for authenticated users.
 declare(strict_types=1);
 
 session_start();

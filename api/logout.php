@@ -1,4 +1,5 @@
 <?php
+// Clears the active session and logout cookie, then returns a JSON success response.
 declare(strict_types=1);
 
 session_start();
